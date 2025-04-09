@@ -2,6 +2,11 @@
 const themeToggle = document.getElementById('theme-toggle');
 const themeIcon = themeToggle.querySelector('i');
 
+// Ensure products array is defined (if not defined globally)
+if (typeof products === 'undefined') {
+    const products = [];
+}
+
 // Check for saved theme preference or use preferred color scheme
 const savedTheme = localStorage.getItem('theme');
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -109,15 +114,15 @@ const updateCartQuantity = (productId, newQuantity) => {
     }
 };
 
-// Update cart display
+// Update cart display - Fix this function
 const updateCartDisplay = () => {
-    // Clear current items
-    while (cartItems.children.length > 0) {
-        if (cartItems.firstChild === cartEmpty) {
-            break;
-        }
+    // Clear current items including the empty message
+    while (cartItems.firstChild) {
         cartItems.removeChild(cartItems.firstChild);
     }
+    
+    // Re-add the empty cart message (it will be shown/hidden as needed)
+    cartItems.appendChild(cartEmpty);
     
     // Add each cart item to display
     cart.forEach(item => {
@@ -153,7 +158,7 @@ const updateCartDisplay = () => {
         cartEmpty.style.display = 'none';
     }
     
-    // Add event listeners to buttons - THIS IS THE KEY FIX for issues 2 & 3
+    // Add event listeners to buttons
     document.querySelectorAll('.cart-item .increase-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const id = parseInt(this.dataset.id);
@@ -184,16 +189,15 @@ const updateCartDisplay = () => {
     updateCartSummary();
 };
 
-// Create product cards
+// Replace the product card creation with this version
 products.forEach(product => {
     const productCard = document.createElement('div');
     productCard.className = 'product-card';
-    // Remove draggable attribute from the entire card
     productCard.dataset.id = product.id;
     
     productCard.innerHTML = `
         <div class="stock-info">${product.stock} in stock</div>
-        <div class="product-image" draggable="true" data-id="${product.id}">
+        <div class="product-image">
             <i class="fas ${product.icon}"></i>
         </div>
         <div class="product-details">
@@ -208,6 +212,9 @@ products.forEach(product => {
                 <input type="range" class="quantity-slider" id="quantity-slider-${product.id}"
                     min="0.5" max="10" step="0.5" value="0.5">
             </div>
+            <button class="add-to-cart-btn" data-id="${product.id}">
+                <i class="fas fa-cart-plus"></i> Add to Cart
+            </button>
         </div>
     `;
     
@@ -222,36 +229,19 @@ products.forEach(product => {
         const value = parseFloat(slider.value);
         quantityValue.textContent = value.toFixed(1);
     });
-    
-    // Fix drag functionality to only apply to the image
-    const productImage = productCard.querySelector('.product-image');
-    
-    productImage.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', JSON.stringify({
-            id: product.id,
-            quantity: parseFloat(document.getElementById(`quantity-slider-${product.id}`).value)
-        }));
-        productImage.classList.add('dragging');
-    });
-    
-    productImage.addEventListener('dragend', () => {
-        productImage.classList.remove('dragging');
-    });
-    
-    // For touch devices (alternative to drag & drop)
-    if (window.matchMedia('(hover: none)').matches) {
-        // Replace slider with button for touch devices
-        const touchBtn = document.createElement('button');
-        touchBtn.className = 'add-to-cart-btn';
-        touchBtn.innerHTML = `<i class="fas fa-cart-plus"></i> Add to Cart`;
+});
+
+// Add event listeners for "Add to Cart" buttons
+document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const id = parseInt(this.dataset.id);
+        const product = products.find(p => p.id === id);
+        const quantity = parseFloat(document.getElementById(`quantity-slider-${id}`).value);
         
-        touchBtn.addEventListener('click', () => {
-            const quantity = parseFloat(slider.value);
+        if (product && quantity > 0) {
             addToCart(product, quantity);
-        });
-        
-        productCard.querySelector('.product-details').appendChild(touchBtn);
-    }
+        }
+    });
 });
 
 // Cart drop area functionality
@@ -267,16 +257,28 @@ cartDropArea.addEventListener('dragleave', () => {
 cartDropArea.addEventListener('drop', (e) => {
     e.preventDefault();
     cartDropArea.classList.remove('dragover');
+    console.log('Item dropped!');
     
     try {
-        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        const rawData = e.dataTransfer.getData('text/plain');
+        console.log('Raw data:', rawData);
+        
+        if (!rawData) {
+            console.error('No data received in drop event');
+            return;
+        }
+        
+        const data = JSON.parse(rawData);
+        console.log('Parsed data:', data);
+        
         const product = products.find(p => p.id === data.id);
+        console.log('Found product:', product);
         
         if (product && data.quantity > 0) {
             addToCart(product, data.quantity);
         }
     } catch (error) {
-        console.error('Invalid drop data:', error);
+        console.error('Error processing drop:', error);
     }
 });
 
