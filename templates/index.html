@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pavilions Supermarket</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-parking"></i>
+                <span>Pavilions</span>
+            </div>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="card">
+            <div class="card-header">
+                <h1>Welcome to Pavilions</h1>
+                <p>Enter your vehicle and contact information to begin shopping</p>
+            </div>
+
+            <form id="pavilions-form" action="/shop" method="GET">
+                <!-- Add this vehicle type selector before the vehicle number input -->
+                <div class="form-group vehicle-type-container">
+                    <label class="switch-label">
+                        <i class="fas fa-shuttle-van"></i>
+                        Vehicle Type
+                    </label>
+                    <div class="switch-container">
+                        <div class="vehicle-option active" data-type="bike">
+                            <i class="fas fa-motorcycle"></i>
+                            <span>Bike</span>
+                        </div>
+                        <div class="vehicle-option" data-type="car">
+                            <i class="fas fa-car-side"></i>
+                            <span>Car</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="vehicle-type" name="vehicle_type" value="bike">
+                </div>
+        
+                <div class="form-group">
+                    <label for="vehicle-number" class="form-label">
+                        <i class="fas fa-car"></i>
+                        Vehicle Number
+                    </label>
+                    <input type="text" id="vehicle-number" name="vehicle_number" class="form-input" placeholder="Enter vehicle number (e.g., KA-01-AB-1234)" required>
+                    <small class="form-hint">Format: state-code-district code-series-number</small>
+                    <span id="vehicle-error" class="error-message">Please enter a valid vehicle number</span>
+                </div>
+        
+                <div class="form-group">
+                    <label for="phone-number" class="form-label">
+                        <i class="fas fa-phone-alt"></i>
+                        Phone Number
+                    </label>
+                    <input type="tel" id="phone-number" name="phone" class="form-input" placeholder="Enter phone number" required>
+                    <small class="form-hint">Format: 10-digit number (default country code is +91)</small>
+                    <span id="phone-error" class="error-message">Please enter a valid phone number</span>
+                </div>
+        
+                <button type="submit" class="btn">Continue to Shop <i class="fas fa-arrow-right" style="margin-left: 0.5rem;"></i></button>
+            </form>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+</body>
+</html>

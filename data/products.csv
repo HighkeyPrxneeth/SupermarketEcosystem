@@ -1,0 +1,12 @@
+product_id,name,price,quantity,category,reorder_level
+3001,Milk,60.00,50,Dairy,20
+3002,Bread,30.00,30,Bakery,10
+3003,Eggs,120.00,100,Poultry,30
+3004,Rice,80.00,60,Grains,25
+3005,Sugar,45.00,40,Grocery,15
+3006,Salt,20.00,80,Grocery,30
+3007,Chicken,250.00,20,Meat,10
+3008,Fish,300.00,15,Seafood,5
+3009,Apples,150.00,40,Fruits,15
+3010,Bananas,50.00,60,Fruits,20
+3011,Oranges,100.00,50,Fruits,20

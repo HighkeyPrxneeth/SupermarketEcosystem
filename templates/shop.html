@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pavilions Supermarket - Shop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shop.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-parking"></i>
+                <span>Pavilions</span>
+            </div>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i>{{ error }}
+        </div>
+        {% else %}
+
+        <div class="customer-info">
+            <div class="info-header">
+                <i class="fas fa-info-circle"></i>
+                <span>Your Information</span>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Vehicle Number:</div>
+                <div class="info-value">{{ vehicle_number }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Phone Number:</div>
+                <div class="info-value">{{ phone }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Session ID:</div>
+                <div class="info-value">{{ session }}</div>
+            </div>
+        </div>
+
+        <div class="shop-container">
+            <!-- Products on the left -->
+            <div class="products-container">
+                <h2 class="section-title">Available Products</h2>
+                {% if products|length == 0 %}
+                <div class="product-empty">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>No products available at the moment. Please check back later.</p>
+                </div>
+                {% else %}
+                <div class="product-grid" id="product-grid">
+                    <!-- Product cards will be populated by JavaScript -->
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Cart on the right -->
+            <div class="cart-container">
+                <div class="cart-header">
+                    <div class="cart-title">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Your Cart</span>
+                    </div>
+                    <div class="cart-count" id="cart-count">0</div>
+                </div>
+                
+                <div class="cart-visual">
+                    <div class="cart-drop-area" id="cart-drop-area">
+                        <div class="cart-graphic">
+                            <div class="cart-body"></div>
+                            <div class="cart-handle"></div>
+                            <div class="cart-wheel-left"></div>
+                            <div class="cart-wheel-right"></div>
+                            <div class="cart-item-indicator" id="cart-bubbles"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="cart-items" id="cart-items">
+                    <div class="cart-empty" id="cart-empty">
+                        Your cart is empty. Drag products to add them!
+                    </div>
+                    <!-- Cart items will be populated here -->
+                </div>
+                
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <div>Subtotal</div>
+                        <div id="cart-subtotal">₹0.00</div>
+                    </div>
+                    <div class="summary-row">
+                        <div>GST (18%)</div>
+                        <div id="cart-tax">₹0.00</div>
+                    </div>
+                    <div class="summary-row total">
+                        <div>Total</div>
+                        <div id="cart-total">₹0.00</div>
+                    </div>
+                    
+                    <button class="checkout-btn">
+                        Proceed to Checkout
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Pavilions Supermarket. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const products = [
+            {% for product in products %}
+                {
+                    id: {{ product.product_id }},
+                    name: '{{ product.name }}',
+                    category: '{{ product.category }}',
+                    price: {{ product.price }},
+                    stock: {{ product.quantity }},
+                    icon: getIconForCategory('{{ product.category }}')
+                }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        // Function to determine icon based on product category
+        function getIconForCategory(category) {
+            const categoryIcons = {
+                'Fruits': 'fa-apple-whole',
+                'Vegetables': 'fa-carrot',
+                'Dairy': 'fa-cheese',
+                'Bakery': 'fa-bread-slice',
+                'Meat': 'fa-drumstick-bite',
+                'Seafood': 'fa-fish',
+                'Grains': 'fa-wheat-awn',
+                'Snacks': 'fa-cookie',
+                'Beverages': 'fa-mug-hot',
+                'Oils': 'fa-bottle-droplet',
+                'Household': 'fa-spray-can-sparkles',
+                'Personal Care': 'fa-soap',
+                'Frozen': 'fa-snowflake',
+                'Canned': 'fa-can-food',
+                'Spices': 'fa-pepper-hot'
+            };
+            
+            // Return the matching icon or a default one
+            return categoryIcons[category] || 'fa-box';
+        }
+        
+        // Cart functionality
+        
+    </script>
+    <script src="{{ url_for('static', filename='js/shop.js') }}"></script>
+</body>
+</html>

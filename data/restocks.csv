@@ -1,0 +1,12 @@
+restock_id,product_id,supplier,quantity,restock_date
+4001,3001,Verka,100,2025-04-07
+4002,3002,Modern Dairies,50,2025-04-06
+4003,3003,Suguna Foods,200,2025-04-05
+4004,3004,KRBL,100,2025-04-04
+4005,3005,TATA,80,2025-04-03
+4006,3006,Annapurna,150,2025-04-02
+4007,3007,Godrej Tyson,50,2025-04-01
+4008,3008,Coastal Corporation,30,2025-03-31
+4009,3009,Shimla Hills,100,2025-03-30
+4010,3010,Dole,120,2025-03-29
+4011,3011,Sunkist,100,2025-04-08
