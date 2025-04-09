@@ -37,5 +37,40 @@ def shop():
     products = list_products(cursor)
     return render_template('shop.html', session=session, cust=cust, products=products, vehicle_number=vehicle_number, phone=phone)   
 
+@app.route('/checkout')
+def checkout():
+    # This will render the checkout page - cart data is stored in session storage
+    return render_template('checkout.html')
+
+@app.route('/process-payment', methods=['POST'])
+def process_payment():
+    if request.json:
+        order_data = request.json
+        customer_id = request.args.get('cust', 1)  # Default to 1 if not provided
+        
+        try:
+            total_amount = order_data['summary']['total']
+            
+            sale_id = make_transaction(cursor, customer_id, total_amount)
+            
+            cnx.commit() 
+            
+            return {
+                'status': 'success',
+                'message': 'Payment processed successfully',
+                'order_id': sale_id
+            }
+        except Exception as e:
+            cnx.rollback()  # Rollback in case of error
+            return {
+                'status': 'error',
+                'message': f'Error processing payment: {str(e)}'
+            }, 500
+    else:
+        return {
+            'status': 'error',
+            'message': 'No data received'
+        }, 400
+
 if __name__ == '__main__':
     app.run(debug=True)

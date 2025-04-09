@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pavilions Supermarket - Checkout</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shop.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-parking"></i>
+                <span>Pavilions</span>
+            </div>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="checkout-container">
+            <div class="checkout-header">
+                <h1>Checkout</h1>
+                <div class="breadcrumb">
+                    <a href="/">Home</a> / 
+                    <a href="javascript:history.back()">Shop</a> / 
+                    <span>Checkout</span>
+                </div>
+            </div>
+
+            <div class="checkout-grid">
+                <!-- Order Summary Column -->
+                <div class="order-summary">
+                    <div class="section-header">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h2>Order Summary</h2>
+                    </div>
+                    
+                    <div id="summary-items" class="summary-items">
+                        <!-- Items will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="summary-details">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span id="summary-subtotal">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax (18%)</span>
+                            <span id="summary-tax">₹0.00</span>
+                        </div>
+                        <div class="summary-row discount-row" id="discount-row">
+                            <span>Discount</span>
+                            <span id="summary-discount">-₹0.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span id="summary-total">₹0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Column -->
+                <div class="payment-section">
+                    <div class="section-header">
+                        <i class="fas fa-credit-card"></i>
+                        <h2>Payment Details</h2>
+                    </div>
+
+                    <form id="payment-form">
+                        <!-- Coupon Code Section -->
+                        <div class="coupon-container">
+                            <button type="button" id="coupon-toggle" class="coupon-toggle">
+                                <i class="fas fa-tag"></i>
+                                <span>Apply a Coupon</span>
+                            </button>
+                            
+                            <div id="coupon-menu" class="coupon-menu">
+                                <div class="coupon-header">
+                                    <h3>Available Coupons</h3>
+                                    <button type="button" id="close-coupon" class="close-coupon">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="coupon-list">
+                                    <div class="coupon-item" data-code="FIRST10" data-discount="10">
+                                        <div class="coupon-info">
+                                            <div class="coupon-code">FIRST10</div>
+                                            <div class="coupon-desc">10% off your first order</div>
+                                        </div>
+                                        <button type="button" class="apply-coupon-btn">Apply</button>
+                                    </div>
+                                    
+                                    <div class="coupon-item" data-code="SUMMER20" data-discount="20">
+                                        <div class="coupon-info">
+                                            <div class="coupon-code">SUMMER20</div>
+                                            <div class="coupon-desc">20% off on orders above ₹500</div>
+                                        </div>
+                                        <button type="button" class="apply-coupon-btn">Apply</button>
+                                    </div>
+                                    
+                                    <div class="coupon-item" data-code="SPECIAL15" data-discount="15">
+                                        <div class="coupon-info">
+                                            <div class="coupon-code">SPECIAL15</div>
+                                            <div class="coupon-desc">15% off for special customers</div>
+                                        </div>
+                                        <button type="button" class="apply-coupon-btn">Apply</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="applied-coupon" class="applied-coupon">
+                                <div class="applied-coupon-info">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Coupon <span id="applied-code"></span> applied!</span>
+                                </div>
+                                <button type="button" id="remove-coupon" class="remove-coupon-btn">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Payment Methods -->
+                        <div class="payment-methods">
+                            <h3>Select Payment Method</h3>
+                            
+                            <div class="payment-options">
+                                <label class="payment-option">
+                                    <input type="radio" name="payment-method" value="card" checked>
+                                    <div class="payment-card">
+                                        <div class="payment-icon">
+                                            <i class="fas fa-credit-card"></i>
+                                        </div>
+                                        <div class="payment-label">Credit/Debit Card</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="payment-option">
+                                    <input type="radio" name="payment-method" value="upi">
+                                    <div class="payment-card">
+                                        <div class="payment-icon">
+                                            <i class="fas fa-mobile-alt"></i>
+                                        </div>
+                                        <div class="payment-label">UPI</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="payment-option">
+                                    <input type="radio" name="payment-method" value="wallet">
+                                    <div class="payment-card">
+                                        <div class="payment-icon">
+                                            <i class="fas fa-wallet"></i>
+                                        </div>
+                                        <div class="payment-label">E-Wallet</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="payment-option">
+                                    <input type="radio" name="payment-method" value="cod">
+                                    <div class="payment-card">
+                                        <div class="payment-icon">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                        </div>
+                                        <div class="payment-label">Cash on Delivery</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Card Details (shown conditionally based on payment method) -->
+                        <div id="card-details" class="card-details">
+                            <div class="form-group">
+                                <label for="card-number">Card Number</label>
+                                <input type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19">
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="expiry">Expiry Date</label>
+                                    <input type="text" id="expiry" placeholder="MM/YY" maxlength="5">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="cvv">CVV</label>
+                                    <input type="text" id="cvv" placeholder="123" maxlength="3">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="card-name">Name on Card</label>
+                                <input type="text" id="card-name" placeholder="John Doe">
+                            </div>
+                        </div>
+                        
+                        <!-- UPI Details -->
+                        <div id="upi-details" class="payment-detail-section">
+                            <div class="form-group">
+                                <label for="upi-id">UPI ID</label>
+                                <input type="text" id="upi-id" placeholder="yourname@upi">
+                            </div>
+                        </div>
+                        
+                        <!-- E-wallet Details -->
+                        <div id="wallet-details" class="payment-detail-section">
+                            <div class="wallet-options">
+                                <label class="wallet-option">
+                                    <input type="radio" name="wallet-type" value="paytm">
+                                    <div class="wallet-card">
+                                        <div class="wallet-icon">P</div>
+                                        <div class="wallet-name">Paytm</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="wallet-option">
+                                    <input type="radio" name="wallet-type" value="phonepe">
+                                    <div class="wallet-card">
+                                        <div class="wallet-icon">Ph</div>
+                                        <div class="wallet-name">PhonePe</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="wallet-option">
+                                    <input type="radio" name="wallet-type" value="amazon">
+                                    <div class="wallet-card">
+                                        <div class="wallet-icon">A</div>
+                                        <div class="wallet-name">Amazon Pay</div>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="wallet-mobile">Mobile Number</label>
+                                <input type="text" id="wallet-mobile" placeholder="10-digit mobile number">
+                            </div>
+                        </div>
+                        
+                        <!-- COD Details -->
+                        <div id="cod-details" class="payment-detail-section">
+                            <div class="cod-message">
+                                <i class="fas fa-info-circle"></i>
+                                <p>Pay with cash upon delivery. Please have the exact change ready.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-actions">
+                            <button type="button" id="back-to-shop" class="secondary-btn">
+                                <i class="fas fa-arrow-left"></i> Back to Shop
+                            </button>
+                            
+                            <button type="button" id="pay-now-btn" class="primary-btn">
+                                <span id="pay-now-text">Pay Now</span>
+                                <span id="pay-amount"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Payment Processing Overlay -->
+            <div id="payment-overlay" class="payment-overlay">
+                <div class="payment-process">
+                    <div class="process-header">
+                        <h3 id="process-title">Processing Payment</h3>
+                    </div>
+                    
+                    <div class="process-animation">
+                        <div class="spinner"></div>
+                    </div>
+                    
+                    <div id="progress-container" class="progress-container">
+                        <div id="progress-bar" class="progress-bar"></div>
+                    </div>
+                    
+                    <div id="process-message" class="process-message">
+                        Please wait while we process your payment...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
+</body>
+</html>

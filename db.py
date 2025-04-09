@@ -58,3 +58,15 @@ def list_products(cursor: conn.connection.MySQLConnection):
         }
         products.append(product)
     return products
+
+def make_transaction(cursor: conn.connection.MySQLConnection, customer_id, total):
+    cursor.execute("SELECT MAX(sale_id) FROM transactions")
+    result = cursor.fetchone()
+    if result[0] is None:
+        latest_sale_id = 1
+    else:
+        latest_sale_id = result[0] + 1
+    cursor.execute(
+        f"INSERT INTO transactions VALUES ('{latest_sale_id}', '{customer_id}', 0.00, '{total}', NOW())",
+    )
+    return latest_sale_id

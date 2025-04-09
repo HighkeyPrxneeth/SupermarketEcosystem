@@ -312,3 +312,34 @@ const addCartBubble = () => {
 
 // Initialize cart display
 updateCartDisplay();
+
+// Add checkout button functionality
+document.querySelector('.checkout-btn').addEventListener('click', function() {
+    if (cart.length === 0) {
+        alert('Your cart is empty. Please add products before checking out.');
+        return;
+    }
+    
+    // Prepare cart data for submission
+    const cartData = {
+        items: cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            subtotal: item.price * item.quantity,
+            icon: item.icon
+        })),
+        summary: {
+            subtotal: parseFloat(cartSubtotal.textContent.replace('₹', '')),
+            tax: parseFloat(cartTax.textContent.replace('₹', '')),
+            total: parseFloat(cartTotal.textContent.replace('₹', ''))
+        }
+    };
+    
+    // Store cart data in session storage for checkout page
+    sessionStorage.setItem('cartData', JSON.stringify(cartData));
+    
+    // Navigate to checkout page
+    window.location.href = '/checkout';
+});
