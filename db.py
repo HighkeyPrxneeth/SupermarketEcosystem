@@ -67,7 +67,7 @@ def make_transaction(cursor: conn.connection.MySQLConnection, order_data, custom
     else:
         sale_id = result[0] + 1
     total = order_data['summary']['total']
-    discount = order_data['summary']['discount']
+    discount = round(order_data['summary']['discount'], 2)
     cursor.execute(
         f"INSERT INTO transactions VALUES ('{sale_id}', '{customer_id}', {discount}, '{total}', NOW())",
     )

@@ -169,11 +169,18 @@ def parking_bill():
     # Calculate parking duration
     current_time = datetime.datetime.now()
     parking_duration = current_time - check_in_time
-    hours_parked = parking_duration.total_seconds() / 3600  # Convert to hours
+    hours_parked_raw = parking_duration.total_seconds() / 3600  # Convert to hours
     
-    # Calculate parking fee (example: ₹50 per hour for cars, ₹30 for bikes)
-    base_rate = 50 if vehicle_type == 'car' else 30
-    parking_fee = base_rate * hours_parked
+    # Round up to the next hour (ceiling) - even 1 minute counts as a full hour
+    import math
+    hours_parked_billed = math.ceil(hours_parked_raw)
+    
+    # Calculate parking fee (₹20 per hour for cars, ₹10 for bikes)
+    base_rate = 20 if vehicle_type == 'car' else 10
+    parking_fee = base_rate * hours_parked_billed
+    
+    # Format the values for display - keep the raw hours for display purposes
+    hours_parked_formatted = f"{int(hours_parked_raw)}h {int((hours_parked_raw % 1) * 60)}m"
     
     # Apply discount on parking based on purchase amount
     parking_discount = 0
@@ -183,9 +190,6 @@ def parking_bill():
         parking_discount = parking_fee * 0.5
         
     final_parking_fee = max(0, parking_fee - parking_discount)
-    
-    # Format the values for display
-    hours_parked_formatted = f"{int(hours_parked)}h {int((hours_parked % 1) * 60)}m"
     
     # Get purchased items
     cursor.execute(

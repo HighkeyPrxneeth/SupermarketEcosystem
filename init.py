@@ -41,8 +41,8 @@ def create_tables(cursor: conn.connection.MySQLCursor):
         CREATE TABLE `transactions` (
             `sale_id` int(5) NOT NULL,
             `customer_id` int(5) NOT NULL,
-            `discount` decimal(3,2),
-            `total` decimal(5,2),
+            `discount` decimal(8,2),
+            `total` decimal(8,2),
             `time` timestamp,
             PRIMARY KEY (`sale_id`),
             FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`)
