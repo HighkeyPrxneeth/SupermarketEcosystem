@@ -59,14 +59,31 @@ def list_products(cursor: conn.connection.MySQLConnection):
         products.append(product)
     return products
 
-def make_transaction(cursor: conn.connection.MySQLConnection, customer_id, total):
+def make_transaction(cursor: conn.connection.MySQLConnection, order_data, customer_id):
     cursor.execute("SELECT MAX(sale_id) FROM transactions")
     result = cursor.fetchone()
     if result[0] is None:
-        latest_sale_id = 1
+        sale_id = 1
     else:
-        latest_sale_id = result[0] + 1
+        sale_id = result[0] + 1
+    total = order_data['summary']['total']
+    discount = order_data['summary']['discount']
     cursor.execute(
-        f"INSERT INTO transactions VALUES ('{latest_sale_id}', '{customer_id}', 0.00, '{total}', NOW())",
+        f"INSERT INTO transactions VALUES ('{sale_id}', '{customer_id}', {discount}, '{total}', NOW())",
     )
-    return latest_sale_id
+    print(f"Inserted into transactions: {sale_id}, {customer_id}, {discount}, {total}")
+    for item in order_data['items']:
+        product_id = item['id']
+        quantity = item['quantity']
+        subtotal = item['subtotal']
+        cursor.execute(
+            f"INSERT INTO sales_details VALUES ('{sale_id}', '{product_id}', {quantity}, {subtotal})",
+        )
+        cursor.execute(
+            f"UPDATE products SET quantity = quantity - {quantity} WHERE product_id = '{product_id}'",
+        )
+    print(f"Updated products with sale_id: {sale_id}")
+    cursor.execute(
+        f"COMMIT",
+    )
+    return sale_id

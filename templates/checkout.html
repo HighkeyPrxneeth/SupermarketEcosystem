@@ -30,7 +30,10 @@
                     <span>Checkout</span>
                 </div>
             </div>
-
+            
+            <!-- Add hidden field for customer ID -->
+            <input type="hidden" id="cust-id" value="{{ cust }}">
+            
             <div class="checkout-grid">
                 <!-- Order Summary Column -->
                 <div class="order-summary">
@@ -160,12 +163,12 @@
                                 </label>
                                 
                                 <label class="payment-option">
-                                    <input type="radio" name="payment-method" value="cod">
+                                    <input type="radio" name="payment-method" value="cash">
                                     <div class="payment-card">
                                         <div class="payment-icon">
                                             <i class="fas fa-money-bill-wave"></i>
                                         </div>
-                                        <div class="payment-label">Cash on Delivery</div>
+                                        <div class="payment-label">Cash</div>
                                     </div>
                                 </label>
                             </div>
@@ -238,11 +241,11 @@
                             </div>
                         </div>
                         
-                        <!-- COD Details -->
+                        <!-- COD Details - update to Cash details -->
                         <div id="cod-details" class="payment-detail-section">
                             <div class="cod-message">
                                 <i class="fas fa-info-circle"></i>
-                                <p>Pay with cash upon delivery. Please have the exact change ready.</p>
+                                <p>Please have the exact change ready if possible.</p>
                             </div>
                         </div>
                         

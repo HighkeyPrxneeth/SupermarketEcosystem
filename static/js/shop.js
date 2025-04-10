@@ -320,6 +320,26 @@ document.querySelector('.checkout-btn').addEventListener('click', function() {
         return;
     }
     
+    // Get customer ID from URL if available
+    const urlParams = new URLSearchParams(window.location.search);
+    let custId = urlParams.get('cust');
+    
+    // If not in URL, try to get from the customer info area
+    if (!custId) {
+        const custInfoElements = document.querySelectorAll('.info-value');
+        custInfoElements.forEach(element => {
+            if (element.previousElementSibling && 
+                element.previousElementSibling.textContent === 'Customer ID:') {
+                custId = element.textContent.trim();
+            }
+        });
+    }
+    
+    // If still no customer ID, show warning
+    if (!custId) {
+        console.warn('No customer ID found. This may cause issues with checkout.');
+    }
+    
     // Prepare cart data for submission
     const cartData = {
         items: cart.map(item => ({
@@ -340,6 +360,7 @@ document.querySelector('.checkout-btn').addEventListener('click', function() {
     // Store cart data in session storage for checkout page
     sessionStorage.setItem('cartData', JSON.stringify(cartData));
     
-    // Navigate to checkout page
-    window.location.href = '/checkout';
+    // Navigate to checkout page with customer ID if available
+    console.log('Navigating to checkout with customer ID:', custId);
+    window.location.href = custId ? `/checkout?cust=${custId}` : '/checkout';
 });

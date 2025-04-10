@@ -1,0 +1,252 @@
+.bill-container {
+    max-width: 800px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.bill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.bill-header h1 {
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.bill-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    background-color: var(--border-color);
+}
+
+.action-btn.primary {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.action-btn.primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.bill-card {
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.receipt-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.store-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.store-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.store-logo i {
+    font-size: 1.5rem;
+}
+
+.store-address, .store-contact {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.receipt-info {
+    text-align: right;
+}
+
+.receipt-row {
+    margin-bottom: 0.5rem;
+}
+
+.receipt-row .label {
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.customer-details, .purchase-details, .parking-details {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.detail-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.detail-value {
+    font-weight: 500;
+}
+
+.item-list {
+    margin-bottom: 1.5rem;
+}
+
+.item-header {
+    display: grid;
+    grid-template-columns: 1fr 100px 100px;
+    font-weight: 600;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.item-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 100px;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.item-row:last-child {
+    border-bottom: none;
+}
+
+.item-name {
+    padding-right: 1rem;
+}
+
+.item-quantity, .item-subtotal {
+    text-align: center;
+}
+
+.purchase-summary, .parking-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.summary-row.discount {
+    color: #22c55e;
+}
+
+.summary-row.total {
+    font-weight: 600;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    border-top: 1px dashed var(--border-color);
+}
+
+.grand-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.total-label {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.total-amount {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.receipt-footer {
+    text-align: center;
+    padding-top: 1.5rem;
+}
+
+.thank-you {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.footer-note {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Print styles */
+@media print {
+    header, .bill-header, .action-btn {
+        display: none;
+    }
+    
+    .bill-container {
+        width: 100%;
+        max-width: none;
+    }
+    
+    .bill-card {
+        box-shadow: none;
+        padding: 0;
+    }
+    
+    body {
+        background-color: white;
+        color: black;
+    }
+}

@@ -97,6 +97,9 @@ const setupPaymentMethodToggle = () => {
     const walletDetails = document.getElementById('wallet-details');
     const codDetails = document.getElementById('cod-details');
     
+    // Also update the Pay Now button text based on payment method
+    const payNowText = document.getElementById('pay-now-text');
+    
     // Hide all initially except default (card)
     cardDetails.style.display = 'block';
     upiDetails.style.display = 'none';
@@ -115,15 +118,19 @@ const setupPaymentMethodToggle = () => {
             switch(method.value) {
                 case 'card':
                     cardDetails.style.display = 'block';
+                    payNowText.textContent = 'Pay Now';
                     break;
                 case 'upi':
                     upiDetails.style.display = 'block';
+                    payNowText.textContent = 'Pay Now';
                     break;
                 case 'wallet':
                     walletDetails.style.display = 'block';
+                    payNowText.textContent = 'Pay Now';
                     break;
-                case 'cod':
+                case 'cash':
                     codDetails.style.display = 'block';
+                    payNowText.textContent = 'Pay Now';
                     break;
             }
         });
@@ -210,12 +217,46 @@ const setupCouponCode = () => {
 const simulatePayment = () => {
     const paymentOverlay = document.getElementById('payment-overlay');
     const progressBar = document.getElementById('progress-bar');
+    const progressContainer = document.getElementById('progress-container');
     const processTitle = document.getElementById('process-title');
     const processMessage = document.getElementById('process-message');
     const processAnimation = document.querySelector('.process-animation');
     
+    // Get the selected payment method
+    const selectedMethod = document.querySelector('input[name="payment-method"]:checked').value;
+    
     // Show overlay
     paymentOverlay.classList.add('active');
+    
+    // For cash payments, skip the progress bar and go straight to success
+    if (selectedMethod === 'cash') {
+        // Hide progress bar
+        progressContainer.style.display = 'none';
+        
+        // Show success message immediately
+        processTitle.textContent = 'Thanks for shopping!';
+        processMessage.innerHTML = 'We hope you had a smooth shopping experience.';
+        
+        // Display success animation
+        processAnimation.innerHTML = `
+            <div class="success-animation">
+                <div class="success-circle">
+                    <i class="fas fa-check success-icon"></i>
+                </div>
+            </div>
+            <div class="redirect-message">
+                Proceed to parking in <span class="redirect-countdown">5</span> seconds...
+            </div>
+        `;
+        
+        // Start countdown for redirect
+        handleOrderCompletion();
+        
+        return;
+    }
+    
+    // For other payment methods, show progress bar
+    progressContainer.style.display = 'block';
     
     // Initialize progress
     let progress = 0;
@@ -236,10 +277,10 @@ const simulatePayment = () => {
             clearInterval(progressInterval);
             
             // Show success message
-            processTitle.textContent = 'Payment Successful!';
-            processMessage.innerHTML = 'Your order has been placed successfully.<br>Thank you for shopping with us.';
-            
-            // Replace spinner with success icon
+            processTitle.textContent = 'Thanks for shopping!';
+            processMessage.innerHTML = 'We hope you had a smooth shopping experience.';
+        
+            // Display success animation
             processAnimation.innerHTML = `
                 <div class="success-animation">
                     <div class="success-circle">
@@ -247,63 +288,112 @@ const simulatePayment = () => {
                     </div>
                 </div>
                 <div class="redirect-message">
-                    Redirecting to shop in <span class="redirect-countdown">5</span> seconds...
+                    Proceed to parking in <span class="redirect-countdown">5</span> seconds...
                 </div>
             `;
             
-            // Start countdown for redirect
-            let countdown = 5;
-            const countdownElement = document.querySelector('.redirect-countdown');
-            const countdownInterval = setInterval(() => {
-                countdown--;
-                countdownElement.textContent = countdown;
-                if (countdown <= 0) {
-                    clearInterval(countdownInterval);
-                    
-                    // Prepare order data to send to server
-                    const selectedPaymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
-                    
-                    const orderData = {
-                        items: cartData.items.map(item => ({
-                            id: item.id,
-                            quantity: item.quantity,
-                            price: item.price
-                        })),
-                        summary: {
-                            subtotal: cartData.summary.subtotal,
-                            tax: cartData.summary.tax,
-                            discount: appliedDiscount > 0 ? (originalTotal * appliedDiscount) : 0,
-                            total: finalTotal
-                        },
-                        paymentMethod: selectedPaymentMethod
-                    };
-                    
-                    // Send order data to server
-                    fetch('/process-payment', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(orderData)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Payment processed:', data);
-                        // Clear cart data
-                        sessionStorage.removeItem('cartData');
-                        // Redirect to shop
-                        window.location.href = '/shop';
-                    })
-                    .catch(error => {
-                        console.error('Error processing payment:', error);
-                        // Still redirect to shop even on error
-                        sessionStorage.removeItem('cartData');
-                        window.location.href = '/shop';
-                    });
-                }
-            }, 1000);
+            
+            // Handle order completion
+            handleOrderCompletion();
         }
     }, 100);
+};
+
+// Extract the order completion logic to a separate function
+const handleOrderCompletion = () => {
+    let countdown = 5;
+    const countdownElement = document.querySelector('.redirect-countdown');
+    const countdownInterval = setInterval(() => {
+        countdown--;
+        countdownElement.textContent = countdown;
+        if (countdown <= 0) {
+            clearInterval(countdownInterval);
+            
+            // Get URL parameters to pass customer_id if available
+            const urlParams = new URLSearchParams(window.location.search);
+            let custId = urlParams.get('cust');
+            
+            console.log("Processing with customer ID:", custId); // Debug output
+            
+            if (!custId) {
+                console.error("No customer ID found in URL!");
+                // Try to get from hidden field if available
+                const hiddenCustField = document.getElementById('cust-id');
+                if (hiddenCustField) {
+                    custId = hiddenCustField.value;
+                    console.log("Retrieved customer ID from hidden field:", custId);
+                }
+            }
+            
+            // Prepare order data to send to server
+            const selectedPaymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+            
+            const orderData = {
+                items: cartData.items.map(item => ({
+                    id: item.id,
+                    quantity: item.quantity,
+                    price: item.price,
+                    subtotal: item.price * item.quantity
+                })),
+                summary: {
+                    subtotal: cartData.summary.subtotal,
+                    tax: cartData.summary.tax,
+                    discount: appliedDiscount > 0 ? (originalTotal * appliedDiscount) : 0,
+                    total: finalTotal
+                },
+                paymentMethod: selectedPaymentMethod
+            };
+            
+            // Construct URL with customer ID if available
+            const url = custId ? 
+                `/process-payment?cust=${custId}` : 
+                '/process-payment';
+            
+            console.log("Processing URL:", url); // Debug output
+            
+            // Send order data to server
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => {
+                console.log("Response status:", response.status); // Debug output
+                return response.json();
+            })
+            .then(data => {
+                console.log('Payment processed:', data);
+                // Clear cart data
+                sessionStorage.removeItem('cartData');
+                
+                // Save order data for the parking bill
+                sessionStorage.setItem('orderSummary', JSON.stringify({
+                    items: cartData.items,
+                    summary: {
+                        subtotal: cartData.summary.subtotal,
+                        tax: cartData.summary.tax,
+                        discount: appliedDiscount > 0 ? (originalTotal * appliedDiscount) : 0,
+                        total: finalTotal
+                    },
+                    orderId: data.order_id
+                }));
+                
+                // Redirect to parking bill page instead of shop
+                const parkingBillUrl = '/parking-bill' + (custId ? `?cust=${custId}` : '');
+                console.log("Redirecting to:", parkingBillUrl); // Debug output
+                window.location.href = parkingBillUrl;
+            })
+            .catch(error => {
+                console.error('Error processing payment:', error);
+                // Still redirect to parking bill on error, using stored data
+                const parkingBillUrl = '/parking-bill' + (custId ? `?cust=${custId}` : '');
+                console.log("Error occurred, redirecting to:", parkingBillUrl); // Debug output
+                window.location.href = parkingBillUrl;
+            });
+        }
+    }, 1000);
 };
 
 // Form validation (basic)
@@ -335,6 +425,7 @@ const validateForm = () => {
             return false;
         }
     }
+    // No validation needed for cash option
     
     return true;
 };
@@ -392,6 +483,12 @@ const setupCardFormatting = () => {
 
 // Initialize all functionality
 document.addEventListener('DOMContentLoaded', () => {
+    // Add debug logging for customer ID at page load
+    const urlParams = new URLSearchParams(window.location.search);
+    const custId = urlParams.get('cust');
+    console.log("Checkout page loaded with customer ID:", custId);
+    
+    // Continue with other initialization
     populateOrderSummary();
     setupPaymentMethodToggle();
     setupCouponCode();

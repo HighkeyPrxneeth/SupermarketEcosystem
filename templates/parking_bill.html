@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pavilions - Parking Bill</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shop.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/parking_bill.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-parking"></i>
+                <span>Pavilions</span>
+            </div>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="bill-container">
+            <div class="bill-header">
+                <h1>Receipt & Parking Bill</h1>
+                <div class="bill-actions">
+                    <button id="print-bill" class="action-btn">
+                        <i class="fas fa-print"></i> Print Receipt
+                    </button>
+                    <button id="done-btn" class="action-btn primary">
+                        <i class="fas fa-check"></i> Done
+                    </button>
+                </div>
+            </div>
+            
+            <div class="bill-card" id="printable-content">
+                <div class="receipt-header">
+                    <div class="store-info">
+                        <div class="store-logo">
+                            <i class="fas fa-parking"></i>
+                            <span>Pavilions Supermarket</span>
+                        </div>
+                        <div class="store-address">123 Shopping Avenue, Metro City</div>
+                        <div class="store-contact">Tel: +91-123-456-7890</div>
+                    </div>
+                    
+                    <div class="receipt-info">
+                        <div class="receipt-row">
+                            <span class="label">Receipt #:</span>
+                            <span>P{{ sale_id }}</span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="label">Date:</span>
+                            <span>{{ current_time.strftime('%d-%b-%Y') }}</span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="label">Time:</span>
+                            <span>{{ current_time.strftime('%I:%M %p') }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="customer-details">
+                    <div class="section-title">Customer Details</div>
+                    <div class="details-grid">
+                        <div class="detail-group">
+                            <div class="detail-label">Customer ID</div>
+                            <div class="detail-value">{{ customer_id }}</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">Vehicle Number</div>
+                            <div class="detail-value">{{ vehicle_number }}</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">Phone</div>
+                            <div class="detail-value">{{ phone }}</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">Parking Slot</div>
+                            <div class="detail-value">{{ slot_id }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="purchase-details">
+                    <div class="section-title">Purchased Items</div>
+                    <div class="item-list">
+                        <div class="item-header">
+                            <div class="item-name">Item</div>
+                            <div class="item-quantity">Qty</div>
+                            <div class="item-subtotal">Amount</div>
+                        </div>
+                        
+                        {% for item in purchased_items %}
+                        <div class="item-row">
+                            <div class="item-name">{{ item.name }}</div>
+                            <div class="item-quantity">{{ item.quantity }}</div>
+                            <div class="item-subtotal">₹{{ "%.2f"|format(item.subtotal) }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="purchase-summary">
+                        <div class="summary-row">
+                            <div class="summary-label">Purchase Total</div>
+                            <div class="summary-value">₹{{ "%.2f"|format(purchase_total) }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="parking-details">
+                    <div class="section-title">Parking Details</div>
+                    <div class="parking-summary">
+                        <div class="summary-row">
+                            <div class="summary-label">Check-in Time</div>
+                            <div class="summary-value">{{ check_in_time.strftime('%d-%b-%Y %I:%M %p') }}</div>
+                        </div>
+                        <div class="summary-row">
+                            <div class="summary-label">Check-out Time</div>
+                            <div class="summary-value">{{ current_time.strftime('%d-%b-%Y %I:%M %p') }}</div>
+                        </div>
+                        <div class="summary-row">
+                            <div class="summary-label">Duration</div>
+                            <div class="summary-value">{{ hours_parked }}</div>
+                        </div>
+                        <div class="summary-row">
+                            <div class="summary-label">Parking Fee</div>
+                            <div class="summary-value">₹{{ "%.2f"|format(parking_fee) }}</div>
+                        </div>
+                        {% if parking_discount > 0 %}
+                        <div class="summary-row discount">
+                            <div class="summary-label">Parking Discount</div>
+                            <div class="summary-value">-₹{{ "%.2f"|format(parking_discount) }}</div>
+                        </div>
+                        {% endif %}
+                        <div class="summary-row total">
+                            <div class="summary-label">Final Parking Fee</div>
+                            <div class="summary-value">₹{{ "%.2f"|format(final_parking_fee) }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grand-total">
+                    <div class="total-label">Grand Total</div>
+                    <div class="total-amount">₹{{ "%.2f"|format(grand_total) }}</div>
+                </div>
+                
+                <div class="receipt-footer">
+                    <div class="thank-you">Thank you for shopping with us!</div>
+                    <div class="footer-note">Visit us again soon.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/parking_bill.js') }}"></script>
+</body>
+</html>
