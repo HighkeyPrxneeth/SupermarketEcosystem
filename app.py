@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect
 from mysql import connector as conn
 from mysql.connector import errorcode
 import datetime
+import math
 
 from init import *
 from db import *
@@ -37,8 +38,7 @@ def shop():
     customer_id = request.args.get('cust')
     if customer_id:
         # Look up existing session for this customer
-        cursor.execute("SELECT parking_session_id FROM customers WHERE customer_id = %s", (customer_id,))
-        result = cursor.fetchone()
+        result = get_parking_session_by_customer_id(cursor, customer_id)
         if result:
             session_id = result[0]
             return render_template('shop.html', 
@@ -75,8 +75,7 @@ def checkout():
     if not customer_id:
         try:
             # Get the most recent customer
-            cursor.execute("SELECT customer_id FROM customers ORDER BY customer_id DESC LIMIT 1")
-            result = cursor.fetchone()
+            result = get_latest_customer(cursor)
             if result:
                 customer_id = result[0]
                 print(f"Using latest customer ID: {customer_id}")
@@ -124,17 +123,8 @@ def parking_bill():
         print("No customer ID provided")
         return redirect('/shop')
     
-
     # Get customer parking information
-    cursor.execute(
-        """SELECT p.check_in, p.vehicle_no, p.slot_id, p.slot_type, p.session_id
-            FROM parking_slots p 
-            JOIN customers c ON p.session_id = c.parking_session_id 
-            WHERE c.customer_id = %s AND p.check_out IS NULL""", 
-        (customer_id,)
-    )
-    
-    parking_info = cursor.fetchone()
+    parking_info = get_customer_parking_info(cursor, customer_id)
     if not parking_info:
         print(f"No parking info found for customer_id: {customer_id}")
         return redirect('/shop')
@@ -142,16 +132,7 @@ def parking_bill():
     check_in_time, vehicle_number, slot_id, vehicle_type, session_id = parking_info
     
     # Get the latest transaction for this customer
-    cursor.execute(
-        """SELECT t.sale_id, t.total, t.discount
-            FROM transactions t
-            WHERE t.customer_id = %s
-            ORDER BY t.time DESC
-            LIMIT 1""",
-        (customer_id,)
-    )
-    
-    transaction = cursor.fetchone()
+    transaction = get_latest_transaction(cursor, customer_id)
     if not transaction:
         print(f"No transaction found for customer_id: {customer_id}")
         return redirect('/shop')
@@ -159,12 +140,7 @@ def parking_bill():
     sale_id, purchase_total, discount = transaction
     
     # Get customer phone
-    cursor.execute(
-        "SELECT phone FROM customers WHERE customer_id = %s",
-        (customer_id,)
-    )
-    
-    phone = cursor.fetchone()[0]
+    phone = get_customer_phone(cursor, customer_id)[0]
     
     # Calculate parking duration
     current_time = datetime.datetime.now()
@@ -172,7 +148,6 @@ def parking_bill():
     hours_parked_raw = parking_duration.total_seconds() / 3600  # Convert to hours
     
     # Round up to the next hour (ceiling) - even 1 minute counts as a full hour
-    import math
     hours_parked_billed = math.ceil(hours_parked_raw)
     
     # Calculate parking fee (₹20 per hour for cars, ₹10 for bikes)
@@ -192,21 +167,7 @@ def parking_bill():
     final_parking_fee = max(0, parking_fee - parking_discount)
     
     # Get purchased items
-    cursor.execute(
-        """SELECT p.name, s.quantity, s.subtotal
-            FROM sales_details s
-            JOIN products p ON s.product_id = p.product_id
-            WHERE s.sale_id = %s""",
-        (sale_id,)
-    )
-    
-    purchased_items = []
-    for name, quantity, subtotal in cursor.fetchall():
-        purchased_items.append({
-            'name': name,
-            'quantity': quantity,
-            'subtotal': float(subtotal)
-        })
+    purchased_items = get_purchased_items(cursor, sale_id)
     
     return render_template(
         'parking_bill.html',

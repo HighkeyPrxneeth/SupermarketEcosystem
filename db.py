@@ -87,3 +87,56 @@ def make_transaction(cursor: conn.connection.MySQLConnection, order_data, custom
         f"COMMIT",
     )
     return sale_id
+
+def get_parking_session_by_customer_id(cursor: conn.connection.MySQLConnection, customer_id):
+    cursor.execute("SELECT parking_session_id FROM customers WHERE customer_id = %s", (customer_id,))
+    return cursor.fetchone()
+
+def get_latest_customer(cursor: conn.connection.MySQLConnection):
+    cursor.execute("SELECT customer_id FROM customers ORDER BY customer_id DESC LIMIT 1")
+    return cursor.fetchone()
+
+def get_customer_parking_info(cursor: conn.connection.MySQLConnection, customer_id):
+    cursor.execute(
+        """SELECT p.check_in, p.vehicle_no, p.slot_id, p.slot_type, p.session_id
+           FROM parking_slots p 
+           JOIN customers c ON p.session_id = c.parking_session_id 
+           WHERE c.customer_id = %s AND p.check_out IS NULL""", 
+        (customer_id,)
+    )
+    return cursor.fetchone()
+
+def get_latest_transaction(cursor: conn.connection.MySQLConnection, customer_id):
+    cursor.execute(
+        """SELECT t.sale_id, t.total, t.discount
+           FROM transactions t
+           WHERE t.customer_id = %s
+           ORDER BY t.time DESC
+           LIMIT 1""",
+        (customer_id,)
+    )
+    return cursor.fetchone()
+
+def get_customer_phone(cursor: conn.connection.MySQLConnection, customer_id):
+    cursor.execute(
+        "SELECT phone FROM customers WHERE customer_id = %s",
+        (customer_id,)
+    )
+    return cursor.fetchone()
+
+def get_purchased_items(cursor: conn.connection.MySQLConnection, sale_id):
+    cursor.execute(
+        """SELECT p.name, s.quantity, s.subtotal
+           FROM sales_details s
+           JOIN products p ON s.product_id = p.product_id
+           WHERE s.sale_id = %s""",
+        (sale_id,)
+    )
+    purchased_items = []
+    for name, quantity, subtotal in cursor.fetchall():
+        purchased_items.append({
+            'name': name,
+            'quantity': quantity,
+            'subtotal': float(subtotal)
+        })
+    return purchased_items
