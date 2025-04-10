@@ -1,6 +1,8 @@
 import mysql.connector as conn
+import datetime
 
 def register_parking(cursor: conn.connection.MySQLConnection, vehicle_type, vehicle_number, phone):
+    # Check if vehicle is already parked
     cursor.execute(f"SELECT session_id FROM parking_slots WHERE vehicle_no = '{vehicle_number}' AND check_out IS NULL")
     result = cursor.fetchone()
     if result is not None:
@@ -8,40 +10,52 @@ def register_parking(cursor: conn.connection.MySQLConnection, vehicle_type, vehi
         session_id = result[0]
         cursor.execute(f"SELECT customer_id FROM customers WHERE parking_session_id = '{session_id}'")
         result = cursor.fetchone()
-        customer_id = result[0]
+        customer_id = result[0] if result else None # Handle case where customer might not exist?
         return session_id, customer_id
+
+    # Get latest session ID
     cursor.execute("SELECT MAX(session_id) FROM parking_slots")
     result = cursor.fetchone()
-    if result[0] is None:
-        latest_session_id = 1
-    else:
-        latest_session_id = result[0] + 1
+    latest_session_id = (result[0] or 0) + 1
+
+    # Get occupied slots
     cursor.execute("SELECT slot_id FROM parking_slots WHERE check_out IS NULL")
     result = cursor.fetchall()
-    occupied = []
-    for row in result:
-        occupied.append(row[0])
-    slots = [1, 2, 3, 4, 5]
+    occupied = [row[0] for row in result] #
+
+
+    total_num_slots = 8
+    all_slots = list(range(1, total_num_slots + 1)) 
+
     available_slot = None
-    for slot in slots:
+
+    for slot in all_slots:
         if slot not in occupied:
             available_slot = slot
             break
+
     if available_slot is None:
         print("No available slots")
-        return -1, -1
-    cursor.execute(
-        f"INSERT INTO parking_slots VALUES ({latest_session_id}, {available_slot}, '{vehicle_type}', '{vehicle_number}', NOW(), NULL, 0.00)",
-    )
+        return -1, -1 
+
+    insert_slot_query = """
+        INSERT INTO parking_slots (session_id, slot_id, slot_type, vehicle_no, check_in, fee)
+        VALUES (%s, %s, %s, %s, NOW(), 0.00)
+    """
+    cursor.execute(insert_slot_query, (latest_session_id, available_slot, vehicle_type, vehicle_number))
+
+
     cursor.execute("SELECT MAX(customer_id) FROM customers")
     result = cursor.fetchone()
-    if result[0] is None:
-        latest_cust_id = 1
-    else:
-        latest_cust_id = result[0] + 1
-    cursor.execute(
-        f"INSERT INTO customers VALUES ('{latest_cust_id}', '{latest_session_id}', '{phone}')",
-    )
+    latest_cust_id = (result[0] or 0) + 1
+
+    insert_cust_query = """
+        INSERT INTO customers (customer_id, parking_session_id, phone)
+        VALUES (%s, %s, %s)
+    """
+    cursor.execute(insert_cust_query, (latest_cust_id, latest_session_id, phone))
+
+
     return latest_session_id, latest_cust_id
 
 def list_products(cursor: conn.connection.MySQLConnection):
@@ -140,3 +154,135 @@ def get_purchased_items(cursor: conn.connection.MySQLConnection, sale_id):
             'subtotal': float(subtotal)
         })
     return purchased_items
+
+def get_sales_summary(cursor: conn.connection.MySQLConnection):
+    """Gets overall sales statistics."""
+    try:
+        # Total Sales Amount
+        cursor.execute("SELECT SUM(total) FROM transactions")
+        total_sales = cursor.fetchone()[0] or 0.0
+
+        # Total Discount Given
+        cursor.execute("SELECT SUM(discount) FROM transactions")
+        total_discount = cursor.fetchone()[0] or 0.0
+
+        # Number of Transactions
+        cursor.execute("SELECT COUNT(*) FROM transactions")
+        num_transactions = cursor.fetchone()[0] or 0
+
+        # Average Purchase Amount
+        avg_purchase = total_sales / num_transactions if num_transactions > 0 else 0.0
+
+        return {
+            'total_sales': float(total_sales),
+            'total_discount': float(total_discount),
+            'num_transactions': num_transactions,
+            'avg_purchase': float(avg_purchase)
+        }
+    except Exception as e:
+        print(f"Error in get_sales_summary: {e}")
+        return {
+            'total_sales': 0.0,
+            'total_discount': 0.0,
+            'num_transactions': 0,
+            'avg_purchase': 0.0
+        }
+
+def get_restock_suggestions(cursor: conn.connection.MySQLConnection):
+    """Finds products below their reorder level."""
+    try:
+        cursor.execute(
+            """SELECT product_id, name, quantity, reorder_level, category
+               FROM products
+               WHERE quantity < reorder_level
+               ORDER BY (reorder_level - quantity) DESC"""
+        )
+        suggestions = []
+        for row in cursor.fetchall():
+            suggestions.append({
+                'id': row[0],
+                'name': row[1],
+                'current_stock': row[2],
+                'reorder_level': row[3],
+                'category': row[4],
+                'needed': row[3] - row[2]  # Calculate how many are needed
+            })
+        return suggestions
+    except Exception as e:
+        print(f"Error in get_restock_suggestions: {e}")
+        return []
+
+def get_parking_status(cursor: conn.connection.MySQLConnection):
+    """Gets the current status of all parking slots."""
+    total_slots = 8
+
+
+    slots = {i: {'status': 'Available', 'details': None} for i in range(1, total_slots + 1)}
+    try:
+        # Fetch occupied slots
+        cursor.execute(
+            """SELECT slot_id, vehicle_no, check_in, slot_type
+               FROM parking_slots
+               WHERE check_out IS NULL"""
+        )
+        occupied_slots = cursor.fetchall()
+        for slot_id, vehicle_no, check_in, slot_type in occupied_slots:
+            if slot_id in slots: # Check if fetched slot_id is within our expected range
+                slots[slot_id]['status'] = 'Occupied'
+                slots[slot_id]['details'] = {
+                    'vehicle_no': vehicle_no,
+                    # Format check_in time for better display
+                    'check_in': check_in.strftime('%Y-%m-%d %H:%M') if isinstance(check_in, datetime.datetime) else str(check_in),
+                    'type': slot_type
+                }
+        return slots
+    except Exception as e:
+        print(f"Error in get_parking_status: {e}")
+        # Return default status if error occurs
+        return {i: {'status': 'Unknown', 'details': None} for i in range(1, total_slots + 1)}
+
+
+def get_most_sold_products(cursor: conn.connection.MySQLConnection, limit=5):
+    """Gets the top N most sold products by quantity."""
+    try:
+        cursor.execute(
+            """SELECT p.name, SUM(sd.quantity) as total_quantity, p.category
+               FROM sales_details sd
+               JOIN products p ON sd.product_id = p.product_id
+               GROUP BY sd.product_id, p.name, p.category
+               ORDER BY total_quantity DESC
+               LIMIT %s""",
+            (limit,)
+        )
+        products = []
+        for name, quantity, category in cursor.fetchall():
+            products.append({
+                'name': name,
+                'total_quantity': int(quantity),
+                'category': category
+            })
+        return products
+    except Exception as e:
+        print(f"Error in get_most_sold_products: {e}")
+        return []
+
+def get_sales_by_category(cursor: conn.connection.MySQLConnection):
+    """Gets total sales amount per product category."""
+    try:
+        cursor.execute(
+            """SELECT p.category, SUM(sd.subtotal) as category_sales
+               FROM sales_details sd
+               JOIN products p ON sd.product_id = p.product_id
+               GROUP BY p.category
+               ORDER BY category_sales DESC"""
+        )
+        categories = []
+        for category, total_sales in cursor.fetchall():
+             categories.append({
+                'category': category,
+                'total_sales': float(total_sales)
+             })
+        return categories
+    except Exception as e:
+        print(f"Error in get_sales_by_category: {e}")
+        return []

@@ -1,14 +1,34 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session, flash, url_for 
 from mysql import connector as conn
 from mysql.connector import errorcode
 import datetime
 import math
+from functools import wraps 
 
 from init import *
 from db import *
 
+app = Flask(__name__)
+app.secret_key = 'odnweu9ndn993n89d39dn3nj89dh3nnmoidmeuinfoienmfoismdofnusinf94noiesmf'
+
+
+ADMIN_USERNAME = 'admin'
+ADMIN_PASSWORD = 'password123'
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('admin_logged_in'):
+            flash('Please log in to access the admin panel.', 'warning')
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 try:
     cnx = conn.connect(user='dbs-lab-user', password='dbslab123', host='localhost', database='project_db')
+    cnx.autocommit = True
     cursor = cnx.cursor()
     del_db(cnx.cursor())
     init_db(cursor)
@@ -16,14 +36,12 @@ try:
     insert_data(cursor)
 except conn.errors.ProgrammingError:
     cnx = conn.connect(user='dbs-lab-user', password='dbslab123', host='localhost')
+    cnx.autocommit = True
     cursor = cnx.cursor()
     init_db(cursor)
     create_tables(cursor)
     insert_data(cursor)
     
-
-app = Flask(__name__)
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -188,5 +206,80 @@ def parking_bill():
     )
 
 
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if session.get('admin_logged_in'):
+        return redirect(url_for('admin_dashboard'))
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['admin_logged_in'] = True
+            flash('Login successful!', 'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Invalid username or password.', 'danger')
+            return redirect(url_for('admin_login'))
+
+    return render_template('admin_login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin_logged_in', None)
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('admin_login'))
+
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    try:
+        # Fetch data using functions from db.py
+        sales_summary = get_sales_summary(cursor)
+        restock_suggestions = get_restock_suggestions(cursor)
+        parking_status = get_parking_status(cursor)
+        most_sold_products = get_most_sold_products(cursor)
+        sales_by_category = get_sales_by_category(cursor)
+
+        # Calculate parking availability
+        occupied_count = sum(1 for slot in parking_status.values() if slot['status'] == 'Occupied')
+        available_count = len(parking_status) - occupied_count
+
+        parking_summary = {
+            'total': len(parking_status),
+            'occupied': occupied_count,
+            'available': available_count
+        }
+
+        # ---> ADD datetime=datetime HERE <---
+        return render_template(
+            'admin_dashboard.html',
+            sales_summary=sales_summary,
+            restock_suggestions=restock_suggestions,
+            parking_status=parking_status,
+            parking_summary=parking_summary,
+            most_sold_products=most_sold_products,
+            sales_by_category=sales_by_category,
+            format_currency=lambda amount: f"₹{amount:,.2f}", # Helper for templates
+            datetime=datetime  # Pass the imported datetime module to the template
+        )
+    except Exception as e:
+        print(f"Error loading admin dashboard: {e}")
+        flash(f"An error occurred while loading the dashboard: {e}", "danger")
+        # Also add datetime here for the error case rendering
+        return render_template(
+            'admin_dashboard.html',
+            sales_summary={'total_sales': 0, 'total_discount': 0, 'num_transactions': 0, 'avg_purchase': 0},
+            restock_suggestions=[],
+            parking_status={},
+            parking_summary={'total': 0, 'occupied': 0, 'available': 0},
+            most_sold_products=[],
+            sales_by_category=[],
+            format_currency=lambda amount: f"₹{amount:,.2f}",
+            error=f"Failed to load dashboard data: {e}",
+            datetime=datetime # Pass datetime here too
+        )
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True) # Keep debug=True for development

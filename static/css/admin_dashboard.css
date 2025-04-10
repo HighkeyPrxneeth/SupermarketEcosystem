@@ -1,0 +1,348 @@
+/* START OF FILE static/css/admin_dashboard.css */
+
+/* --- Variables --- */
+:root {
+    --primary-color: #6366f1;
+    --primary-hover: #4f46e5;
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-color: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --input-bg: #ffffff;
+    --error-color: #ef4444;
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --info-color: #3b82f6;
+    --available-color: #10b981;
+    --occupied-color: #f43f5e;
+    --available-bg: #d1fae5; /* Lighter bg for available */
+    --occupied-bg: #fee2e2; /* Lighter bg for occupied */
+    --available-text: #065f46; /* Darker text */
+    --occupied-text: #991b1b; /* Darker text */
+}
+
+[data-theme="dark"] {
+    --primary-color: #818cf8;
+    --primary-hover: #6366f1;
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --text-color: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --input-bg: #334155;
+    --error-color: #f87171;
+    --success-color: #4ade80;
+    --warning-color: #fbbf24;
+    --info-color: #60a5fa;
+    --available-color: #34d399;
+    --occupied-color: #fb7185;
+    --available-bg: #1f2937; /* Darker bg */
+    --occupied-bg: #1f2937; /* Darker bg */
+    --available-text: var(--available-color); /* Use color directly */
+    --occupied-text: var(--occupied-color); /* Use color directly */
+}
+
+/* --- Base Styles --- */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+.admin-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+/* --- Header --- */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-header .logo {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.admin-logout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.admin-logout-btn:hover { background-color: var(--border-color); box-shadow: var(--shadow); }
+.admin-logout-btn i { color: var(--error-color); }
+
+/* --- Flash Messages --- */
+.flash-messages { margin-bottom: 1.5rem; }
+.alert { padding: 0.75rem 1.25rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.25rem; }
+.alert-danger { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+.alert-warning { color: #856404; background-color: #fff3cd; border-color: #ffeeba; }
+.alert-info { color: #0c5460; background-color: #d1ecf1; border-color: #bee5eb; }
+.alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+[data-theme="dark"] .alert-danger { color: #f8d7da; background-color: #721c24; border-color: #f5c6cb;}
+[data-theme="dark"] .alert-warning { color: #fff3cd; background-color: #856404; border-color: #ffeeba; }
+[data-theme="dark"] .alert-info { color: #d1ecf1; background-color: #0c5460; border-color: #bee5eb;}
+[data-theme="dark"] .alert-success { color: #d4edda; background-color: #155724; border-color: #c3e6cb;}
+
+/* --- Card Base --- */
+.admin-section.card {
+    background-color: var(--card-bg);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    height: 100%; /* Allow cards to fill grid row height */
+    display: flex;
+    flex-direction: column;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0; /* Remove default margin-bottom */
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    flex-shrink: 0; /* Prevent title from shrinking */
+}
+
+/* --- Main Grid Layout --- */
+.admin-main-grid {
+    display: grid;
+    gap: 1.5rem;
+    /* Define a default single column layout */
+    grid-template-columns: 1fr;
+}
+
+/* Define 2-column layout for medium screens and up */
+@media (min-width: 992px) {
+    .admin-main-grid {
+        grid-template-columns: repeat(2, 1fr); /* Simple 2 equal columns */
+         /* Optional: Define rows explicitly if needed */
+        /* grid-template-rows: auto auto auto; */
+    }
+
+    /* Span full width only when needed on larger screens */
+    .grid-span-full-lg {
+        grid-column: 1 / -1; /* Span both columns */
+    }
+
+     /* Assign sections to grid columns */
+     .summary-cards { grid-column: 1 / -1; } /* Always full width */
+     .parking-section { grid-column: 1 / -1; } /* Always full width */
+     .restock-section { grid-column: 1 / 2; } /* First column */
+     .insights-section { grid-column: 2 / 3; } /* Second column */
+}
+
+/* --- Summary Cards --- */
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Adjust minmax */
+    gap: 1rem;
+    /* Removed padding: 1rem; - handled by .admin-section.card */
+}
+
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--input-bg);
+    padding: 1.25rem; /* Increased padding */
+    border-radius: 0.5rem;
+    border-left: 4px solid var(--primary-color);
+}
+.summary-card .card-icon { font-size: 1.75rem; color: var(--primary-color); flex-shrink: 0; width: 40px; text-align: center; }
+.summary-card .card-content { flex-grow: 1; }
+.summary-card .card-value { font-size: 1.5rem; font-weight: 700; line-height: 1.2; word-break: break-all; } /* Prevent overflow */
+.summary-card .card-label { font-size: 0.875rem; color: var(--text-muted); }
+
+/* --- Parking Section --- */
+.parking-layout {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping */
+    gap: 1.5rem;
+    align-items: stretch; /* Make items same height */
+    flex: 1; /* Allow flex layout to take remaining space */
+    margin-top: 1rem; /* Space below title */
+}
+
+.parking-slots-wrapper { /* New wrapper for slots + header */
+    flex: 2; /* Give more space to slots part */
+    min-width: 300px; /* Min width before wrapping */
+    display: flex;
+    flex-direction: column;
+}
+
+.parking-summary-header {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed var(--border-color);
+    font-size: 1rem; /* Increased size */
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.parking-slots-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+    flex-grow: 1; /* Allow container to grow */
+}
+
+.parking-slot {
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    text-align: center;
+    font-weight: 500;
+    transition: transform 0.2s ease;
+    border: 1px solid transparent; /* Make border transparent initially */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 110px; /* Adjusted height */
+}
+.parking-slot:hover { transform: translateY(-3px); }
+
+/* Updated slot styles for better contrast */
+.parking-slot.available {
+    background-color: var(--available-bg);
+    color: var(--available-text);
+    border-color: var(--available-color);
+}
+.parking-slot.occupied {
+    background-color: var(--occupied-bg);
+    color: var(--occupied-text);
+    border-color: var(--occupied-color);
+}
+
+.parking-slot .slot-id { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem; }
+.parking-slot .slot-status { font-size: 0.8rem; margin-bottom: 0.5rem; opacity: 0.9; }
+.parking-slot .slot-details { font-size: 0.75rem; line-height: 1.3; opacity: 0.8; margin-top: auto; } /* Push details down */
+.parking-slot .slot-details i { display: block; font-size: 1rem; margin-bottom: 0.25rem; }
+.parking-slot .slot-details small { font-size: 0.65rem; display: block; margin-top: 0.25rem; }
+
+.parking-chart-container {
+    flex: 1;
+    min-width: 240px; /* Adjusted min width */
+    display: flex; /* Center chart canvas */
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- Table Styles --- */
+.table-container {
+    overflow-x: auto;
+    flex-grow: 1; /* Allow table container to fill space */
+    margin-top: 1rem; /* Space below title */
+}
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; } /* Added nowrap */
+td { white-space: normal; } /* Allow wrapping in data cells */
+th { background-color: var(--input-bg); font-weight: 600; font-size: 0.9rem; position: sticky; top: 0; } /* Sticky header */
+tbody tr:hover { background-color: var(--product-card-hover); }
+td.numeric { text-align: right; }
+td.highlight { font-weight: 600; color: var(--warning-color); }
+
+/* --- Insights Section --- */
+.insights-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Gap between insight subsections */
+}
+
+.insight-section {
+    margin-top: 0; /* Remove margin */
+    padding-top: 0; /* Remove padding */
+    border-top: none; /* Remove border */
+    flex: 1; /* Allow subsections to share space */
+    display: flex;
+    flex-direction: column;
+}
+.insight-section h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+
+/* --- Chart Containers --- */
+.chart-container {
+    position: relative;
+    margin: 0; /* Remove default margin */
+    height: 280px; /* Adjusted height */
+    width: 100%;
+    flex-grow: 1; /* Allow chart container to grow */
+}
+.chart-container-pie {
+    max-width: 300px; /* Smaller max width */
+    height: 280px;
+    margin: 0 auto; /* Center pie chart if container is wider */
+}
+
+
+/* --- General Helpers --- */
+.no-data { color: var(--text-muted); padding: 2rem 1rem; text-align: center; font-style: italic; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
+
+/* --- Footer --- */
+.admin-footer { text-align: center; padding: 1.5rem 0; margin-top: 2rem; color: var(--text-muted); font-size: 0.875rem; border-top: 1px solid var(--border-color); }
+
+/* --- Theme Toggle --- */
+.theme-toggle { background: none; border: none; color: var(--text-color); cursor: pointer; font-size: 1.25rem; width: 40px; height: 40px; border-radius: 50%; background-color: var(--card-bg); box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease; }
+.theme-toggle:hover { transform: translateY(-2px); }
+
+
+/* Responsive Adjustments for Stacking */
+@media (max-width: 991px) { /* Adjusted breakpoint */
+    .admin-main-grid {
+        grid-template-columns: 1fr; /* Stack everything */
+    }
+    /* Ensure sections take full width when stacked */
+     .parking-section, .restock-section, .insights-section {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+     .parking-layout {
+        flex-direction: column; /* Stack parking chart below slots */
+        align-items: center; /* Center items when stacked */
+    }
+    .parking-chart-container {
+         width: 90%; /* Adjust chart width when stacked */
+         max-width: 350px;
+    }
+     .summary-cards {
+         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Adjust for smaller screens */
+    }
+}
+
+
+/* END OF FILE static/css/admin_dashboard.css */

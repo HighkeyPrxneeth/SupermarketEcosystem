@@ -1,0 +1,393 @@
+<!-- START OF FILE templates/admin_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pavilions - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shop.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        /* Add styles for chart containers if needed */
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 300px; /* Adjust height as needed */
+            width: 100%;
+            max-width: 500px; /* Limit max width for better readability */
+            margin-bottom: 1.5rem;
+        }
+        .chart-container-pie {
+            max-width: 350px; /* Smaller max width for pie/doughnut */
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <!-- Header content remains the same -->
+             <div class="logo">
+                <i class="fas fa-shield-alt"></i> <!-- Admin Icon -->
+                <span>Pavilions Admin</span>
+            </div>
+            <div class="admin-actions">
+                 <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <a href="{{ url_for('admin_logout') }}" class="admin-logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            <!-- Flash messages remain the same -->
+             {% if messages %}
+            <div class="flash-messages">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <!-- Use CSS Grid for the main layout -->
+        <main class="admin-main-grid">
+
+            <!-- Sales Summary (Spans full width initially or defined area) -->
+            <section class="admin-section card summary-cards grid-span-full">
+                 <div class="summary-card">
+                    <div class="card-icon"><i class="fas fa-rupee-sign"></i></div>
+                    <div class="card-content">
+                        <div class="card-value">{{ format_currency(sales_summary.total_sales) }}</div>
+                        <div class="card-label">Total Sales</div>
+                    </div>
+                </div>
+                 <div class="summary-card">
+                    <div class="card-icon"><i class="fas fa-receipt"></i></div>
+                    <div class="card-content">
+                        <div class="card-value">{{ sales_summary.num_transactions }}</div>
+                        <div class="card-label">Transactions</div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-icon"><i class="fas fa-percentage"></i></div>
+                    <div class="card-content">
+                        <div class="card-value">{{ format_currency(sales_summary.total_discount) }}</div>
+                        <div class="card-label">Total Discount</div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="card-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="card-content">
+                        <div class="card-value">{{ format_currency(sales_summary.avg_purchase) }}</div>
+                        <div class="card-label">Avg. Purchase</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Parking Status & Chart (Side by side potentially) -->
+            <section class="admin-section card parking-section">
+                <h2 class="section-title"><i class="fas fa-parking"></i> Parking Status</h2>
+                 <div class="parking-layout">
+                    <div class="parking-slots-container">
+                         <div class="parking-summary-header">
+                             {{ parking_summary.available }} / {{ parking_summary.total }} Available
+                         </div>
+                        {% for slot_id, data in parking_status.items() %}
+                        <div class="parking-slot {{ 'occupied' if data.status == 'Occupied' else 'available' }}">
+                             <div class="slot-id">Slot {{ slot_id }}</div>
+                             <div class="slot-status">{{ data.status }}</div>
+                            {% if data.details %}
+                            <div class="slot-details">
+                                <i class="fas {{ 'fa-car' if data.details.type == 'car' else 'fa-motorcycle' }}"></i>
+                                {{ data.details.vehicle_no }} <br>
+                                <small>Since: {{ data.details.check_in }}</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="parking-chart-container chart-container chart-container-pie">
+                         <canvas id="parkingChart"></canvas>
+                     </div>
+                 </div>
+            </section>
+
+            <!-- Restock Suggestions -->
+            <section class="admin-section card restock-section">
+                <h2 class="section-title"><i class="fas fa-box-open"></i> Restock Suggestions</h2>
+                {% if restock_suggestions %}
+                 <div class="table-container">
+                    <!-- Table remains the same -->
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Current</th>
+                                <th>Reorder Lvl</th>
+                                <th>Needed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in restock_suggestions %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.category }}</td>
+                                <td class="numeric">{{ item.current_stock }}</td>
+                                <td class="numeric">{{ item.reorder_level }}</td>
+                                <td class="numeric highlight">{{ item.needed }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="no-data">No products currently require restocking.</p>
+                {% endif %}
+            </section>
+
+            <!-- Business Insights -->
+            <section class="admin-section card insights-section">
+                <h2 class="section-title"><i class="fas fa-chart-line"></i> Business Insights</h2>
+
+                <div class="insight-section">
+                    <h3><i class="fas fa-star"></i> Top 5 Sold Products (by Quantity)</h3>
+                     {% if most_sold_products %}
+                    <div class="chart-container">
+                        <canvas id="topProductsChart"></canvas>
+                    </div>
+                    {% else %}
+                        <p class="no-data">Not enough sales data yet.</p>
+                     {% endif %}
+                </div>
+
+                 <div class="insight-section">
+                    <h3><i class="fas fa-tags"></i> Sales by Category</h3>
+                     {% if sales_by_category %}
+                     <div class="chart-container">
+                         <canvas id="categorySalesChart"></canvas>
+                     </div>
+                     {% else %}
+                        <p class="no-data">Not enough sales data yet.</p>
+                     {% endif %}
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Chart Initialization Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Theme Toggle Script (keep existing) ---
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = themeToggle.querySelector('i');
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            function applyTheme(theme) { /* ... keep applyTheme function ... */
+                 if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    if(themeIcon) themeIcon.classList.replace('fa-moon', 'fa-sun');
+                } else {
+                    document.documentElement.setAttribute('data-theme', '');
+                     if(themeIcon) themeIcon.classList.replace('fa-sun', 'fa-moon');
+                }
+            }
+            applyTheme(savedTheme ? savedTheme : (prefersDark ? 'dark' : ''));
+
+            if(themeToggle) {
+                themeToggle.addEventListener('click', () => { /* ... keep click listener ... */
+                     const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? '' : 'dark';
+                    applyTheme(newTheme);
+                    localStorage.setItem('theme', newTheme);
+                 });
+            }
+
+             // Get computed style for chart colors based on theme
+            const style = getComputedStyle(document.body);
+            const primaryColor = style.getPropertyValue('--primary-color').trim();
+            const textColor = style.getPropertyValue('--text-color').trim();
+            const gridColor = style.getPropertyValue('--border-color').trim();
+            const availableColor = style.getPropertyValue('--available-color').trim();
+            const occupiedColor = style.getPropertyValue('--occupied-color').trim();
+            const chartColors = [ // Define a color palette
+                primaryColor, '#a78bfa', '#f472b6', '#fbbf24', '#4ade80', '#60a5fa', '#fb7185'
+            ];
+
+
+            // --- Parking Chart ---
+            const parkingCtx = document.getElementById('parkingChart');
+            if (parkingCtx) {
+                const parkingSummary = {{ parking_summary | tojson }};
+                if (parkingSummary && parkingSummary.total > 0) {
+                    new Chart(parkingCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Available', 'Occupied'],
+                            datasets: [{
+                                label: 'Parking Slots',
+                                data: [parkingSummary.available, parkingSummary.occupied],
+                                backgroundColor: [availableColor, occupiedColor],
+                                borderColor: style.getPropertyValue('--card-bg').trim(), // Match card background
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                     labels: { color: textColor }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Parking Slot Occupancy',
+                                    color: textColor,
+                                    font: { size: 14 }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // --- Top Products Chart ---
+            const topProductsCtx = document.getElementById('topProductsChart');
+            if (topProductsCtx) {
+                 const topProductsData = {{ most_sold_products | tojson }};
+                 if (topProductsData && topProductsData.length > 0) {
+                    const labels = topProductsData.map(p => p.name);
+                    const data = topProductsData.map(p => p.total_quantity);
+
+                    new Chart(topProductsCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Quantity Sold',
+                                data: data,
+                                backgroundColor: chartColors.slice(0, labels.length), // Use palette
+                                borderColor: chartColors.slice(0, labels.length),
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y', // Horizontal bars
+                            responsive: true,
+                             maintainAspectRatio: false,
+                             scales: {
+                                x: {
+                                     beginAtZero: true,
+                                     ticks: { color: textColor },
+                                     grid: { color: gridColor }
+                                 },
+                                y: {
+                                     ticks: { color: textColor },
+                                     grid: { display: false } // Hide y-axis grid lines for horizontal bars
+                                 }
+                             },
+                            plugins: {
+                                legend: { display: false }, // Hide legend for bar chart if label is clear
+                                title: {
+                                    display: true,
+                                    text: 'Top 5 Sold Products',
+                                    color: textColor,
+                                     font: { size: 14 }
+                                }
+                            }
+                        }
+                    });
+                 }
+            }
+
+            // --- Category Sales Chart ---
+            const categorySalesCtx = document.getElementById('categorySalesChart');
+            if (categorySalesCtx) {
+                 const categorySalesData = {{ sales_by_category | tojson }};
+                 if (categorySalesData && categorySalesData.length > 0) {
+                    const labels = categorySalesData.map(c => c.category);
+                    const data = categorySalesData.map(c => c.total_sales);
+
+                    new Chart(categorySalesCtx, {
+                        type: 'bar', // Or 'pie'
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Total Sales (₹)',
+                                data: data,
+                                backgroundColor: chartColors.slice(0, labels.length),
+                                borderColor: chartColors.slice(0, labels.length),
+                                borderWidth: 1
+                            }]
+                        },
+                         options: {
+                             responsive: true,
+                             maintainAspectRatio: false,
+                             scales: {
+                                 x: {
+                                     ticks: { color: textColor },
+                                     grid: { color: gridColor }
+                                 },
+                                 y: {
+                                     beginAtZero: true,
+                                     ticks: { color: textColor },
+                                     grid: { color: gridColor }
+                                 }
+                             },
+                             plugins: {
+                                 legend: { display: false },
+                                 title: {
+                                     display: true,
+                                     text: 'Total Sales by Category',
+                                     color: textColor,
+                                     font: { size: 14 }
+                                 },
+                                 tooltip: {
+                                     callbacks: {
+                                         label: function(context) {
+                                             let label = context.dataset.label || '';
+                                             if (label) {
+                                                 label += ': ';
+                                             }
+                                             if (context.parsed.y !== null) {
+                                                 label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(context.parsed.y);
+                                             }
+                                             return label;
+                                         }
+                                     }
+                                 }
+                             }
+                         }
+                    });
+                }
+            }
+        });
+    </script>
+     <script>
+        // Keep this dummy datetime for the footer
+        var datetime = {
+            datetime: {
+                now: function() {
+                    return new Date();
+                }
+            }
+        };
+    </script>
+</body>
+</html>
+<!-- END OF FILE templates/admin_dashboard.html -->
